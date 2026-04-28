@@ -1,0 +1,4 @@
+# to change the working area, go to enviroment variable and set SPRING_PROFILES_ACTIVE=dev
+spring:
+  application:
+    name: auth-backend
