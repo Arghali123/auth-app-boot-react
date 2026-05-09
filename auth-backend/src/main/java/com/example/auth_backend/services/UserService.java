@@ -16,6 +16,9 @@ public interface UserService {
     //delete user
     void deleteUser(String userId);
 
+    //get user by id
+    UserDTO getUserById(String userId);
+
     //get all users
     Iterable<UserDTO> getAllUsers();
 }
