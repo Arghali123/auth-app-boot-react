@@ -1,18 +1,73 @@
 package com.example.auth_backend.controller;
 
+import com.example.auth_backend.auth.entities.Users;
+import com.example.auth_backend.auth.payload.LoginRequest;
+import com.example.auth_backend.auth.payload.TokenResponse;
 import com.example.auth_backend.auth.payload.UserDTO;
+import com.example.auth_backend.repositories.UserRepository;
 import com.example.auth_backend.services.AuthService;
+import com.example.auth_backend.services.impl.JwtService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
-import org.apache.catalina.User;
+import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/v1/auth")
 public class AuthController {
     private final AuthService authService;
+
+    private final UserRepository usersRepository;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+    private final ModelMapper modelMapper;
+    private final Logger logger= LoggerFactory.getLogger(this.getClass());
+
+    //login
+    @PostMapping("/login")
+    public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response)
+    {
+        //authenticate
+        Authentication authenticate=authenticate(loginRequest);
+        Users user=usersRepository.findByEmail(loginRequest.email()).orElseThrow(()->new BadCredentialsException("Invalid username and password"));
+        if(!user.isEnable())
+        {
+         throw new DisabledException("User is disabled");
+        }
+
+        //generate token
+        String accessToken=jwtService.generateAccessToken(user);
+        TokenResponse tokenResponse=TokenResponse.of(accessToken,"",jwtService.getAccessTtlSeconds(),modelMapper.map(user,UserDTO.class));
+        logger.info("Successful authentication"+tokenResponse);
+
+        return ResponseEntity.ok(tokenResponse);
+
+    }
+
+    private Authentication authenticate(LoginRequest loginRequest)
+    {
+        try{
+            return authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.email(),loginRequest.password()));
+        }catch (Exception e)
+        {
+            throw new BadCredentialsException(e.getMessage());
+        }
+    }
 
     //register user
     @PostMapping("/register")
