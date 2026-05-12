@@ -8,6 +8,7 @@ import com.example.auth_backend.auth.payload.UserDTO;
 import com.example.auth_backend.repositories.RefreshTokenRepository;
 import com.example.auth_backend.repositories.UserRepository;
 import com.example.auth_backend.services.AuthService;
+import com.example.auth_backend.services.impl.CookieService;
 import com.example.auth_backend.services.impl.JwtService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -40,6 +41,7 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final ModelMapper modelMapper;
+    private final CookieService cookieService;
     private final Logger logger= LoggerFactory.getLogger(this.getClass());
 
     //login
@@ -67,6 +69,11 @@ public class AuthController {
         //generate token
         String accessToken=jwtService.generateAccessToken(user);
         String refreshToken=jwtService.generateRefreshToken(user,refreshTokenObj.getJti());
+
+        //use cookie service to attach refresh token in cookie
+        cookieService.attachRefreshCookie(response,refreshToken,(int)jwtService.getRefreshTtlSeconds());
+        cookieService.addNoStoreHeaders(response);
+
 
         TokenResponse tokenResponse=TokenResponse.of(accessToken,refreshToken,jwtService.getAccessTtlSeconds(),modelMapper.map(user,UserDTO.class));
         logger.info("Successful authentication"+tokenResponse);
