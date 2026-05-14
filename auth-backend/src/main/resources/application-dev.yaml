@@ -15,6 +15,24 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  security:
+    oauth2:
+      client:
+        provider:
+          google:
+            # Force consent screen every login
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth?prompt=consent
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:test-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:test-client}
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            #/login/oauth2/code/google
+            scope:
+              - email
+              - profile
+              - openid
+
 logging:
   level:
     org.springframework.security: DEBUG
@@ -31,3 +49,10 @@ security:
     cookie-same-site: ${JWT_COOKIE_SAME_SITE:lax}
     cookie-domain: ${JWT_COOKIE_DOMAIN:localhost}
 
+  app:
+    cors:
+      front-end-url: ${FRONT_END_URL:http://localhost:5173}
+    auth:
+      frontend:
+        success-redirect: http://localhost:5173/oauth/success
+        failure-redirect: http://localhost:5173/oauth/failure

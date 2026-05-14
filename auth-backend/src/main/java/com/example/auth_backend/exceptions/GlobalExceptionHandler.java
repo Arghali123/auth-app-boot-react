@@ -23,7 +23,8 @@ public class GlobalExceptionHandler {
             UsernameNotFoundException.class,
             BadCredentialsException.class,
             CredentialsExpiredException.class,
-            DisabledException.class
+            DisabledException.class,
+            RuntimeException.class
     })
     public ResponseEntity<ApiError> handleAuthException(Exception e,HttpServletRequest request)
     {
