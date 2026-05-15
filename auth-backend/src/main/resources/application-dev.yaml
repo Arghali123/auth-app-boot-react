@@ -32,6 +32,14 @@ spring:
               - email
               - profile
               - openid
+          github:
+            client-id: ${GITHUB_CLIENT_ID:test-client-id}
+            client-secret: ${GITHUB_CLIENT_SECRET:test-client-secret}
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            #/login/oauth2/code/github
+            scope:
+              - user:email
+              - read:user
 
 logging:
   level:
