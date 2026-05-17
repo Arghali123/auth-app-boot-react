@@ -15,6 +15,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -23,11 +24,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationSuccessHandler authenticationSuccessHandler;
+    private final AuthenticationFailureHandler authenticationFailureHandler;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,AuthenticationSuccessHandler authenticationSuccessHandler)
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            AuthenticationSuccessHandler authenticationSuccessHandler,
+            AuthenticationFailureHandler authenticationFailureHandler
+    )
     {
         this.jwtAuthenticationFilter=jwtAuthenticationFilter;
         this.authenticationSuccessHandler=authenticationSuccessHandler;
+        this.authenticationFailureHandler=authenticationFailureHandler;
     }
 
     @Bean
@@ -39,7 +46,9 @@ public class SecurityConfig {
                         .requestMatchers(AppConstant.AUTH_PUBLIC_URLS).permitAll()
                         .anyRequest().authenticated()
                 )
-                .oauth2Login(oauth2->oauth2.successHandler(authenticationSuccessHandler).failureHandler(null))
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(authenticationSuccessHandler)
+                        .failureHandler(authenticationFailureHandler))
                 .logout(AbstractHttpConfigurer::disable)
                 .exceptionHandling(ex->ex
                         .authenticationEntryPoint(((request, response, e) -> {
