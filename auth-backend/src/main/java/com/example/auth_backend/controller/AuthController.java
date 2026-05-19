@@ -18,6 +18,8 @@ import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,10 +33,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.lang.reflect.Array;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -241,5 +247,20 @@ public class AuthController {
         cookieService.addNoStoreHeaders(response);
         SecurityContextHolder.clearContext();
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource(@Value("${security.app.cors.front-end-url}") String corsUrls)
+    {
+      String[] urls=corsUrls.trim().split(",");
+      var config=new CorsConfiguration();
+      config.setAllowedOrigins(Arrays.asList(urls));
+      config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
+      config.setAllowedHeaders(List.of("*"));
+      config.setAllowCredentials(true);
+
+      var source=new UrlBasedCorsConfigurationSource();
+      source.registerCorsConfiguration("/**",config);
+      return source;
     }
 }
